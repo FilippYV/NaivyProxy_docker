@@ -3,6 +3,8 @@ services:
     build: .
     container_name: naiveproxy
     restart: unless-stopped
+    ports:
+      - "443:443"        # напрямую, без Traefik
     environment:
       DOMAIN: ${DOMAIN}
       EMAIL: ${EMAIL}
@@ -12,27 +14,11 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-    labels:
-      - "traefik.enable=true"
-
-      # ── HTTP роутер для ACME challenge (порт 80) ──────────────────
-      - "traefik.http.routers.naiveproxy-acme.rule=Host(`${DOMAIN}`) && PathPrefix(`/.well-known/acme-challenge/`)"
-      - "traefik.http.routers.naiveproxy-acme.entrypoints=web"
-      - "traefik.http.services.naiveproxy-acme.loadbalancer.server.port=80"
-
-      # ── TCP passthrough для HTTPS (порт 443) ──────────────────────
-      - "traefik.tcp.routers.naiveproxy.rule=HostSNI(`${DOMAIN}`)"
-      - "traefik.tcp.routers.naiveproxy.entrypoints=websecure"
-      - "traefik.tcp.routers.naiveproxy.tls.passthrough=true"
-      - "traefik.tcp.services.naiveproxy.loadbalancer.server.port=443"
-
     networks:
       - dokploy-network
-
 volumes:
   caddy_data:
   caddy_config:
-
 networks:
   dokploy-network:
     external: true
