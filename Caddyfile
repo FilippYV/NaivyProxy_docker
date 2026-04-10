@@ -1,0 +1,18 @@
+# Значения подставляются из переменных окружения (.env / Dokploy UI)
+:443, {env.DOMAIN}
+
+tls {env.EMAIL}
+
+route {
+    forward_proxy {
+        basic_auth {env.PROXY_USER} {env.PROXY_PASS}
+        hide_ip
+        hide_via
+        probe_resistance
+    }
+
+    reverse_proxy {env.MASK_SITE} {
+        header_up Host {upstream_hostport}
+        header_up X-Forwarded-Host {host}
+    }
+}
