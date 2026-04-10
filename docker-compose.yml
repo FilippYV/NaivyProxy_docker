@@ -4,7 +4,7 @@ services:
     container_name: naiveproxy
     restart: unless-stopped
     ports:
-      - "8443:443"        # напрямую, без Traefik
+      - "9443:443"        # напрямую, без Traefik
     environment:
       DOMAIN: ${DOMAIN}
       EMAIL: ${EMAIL}
