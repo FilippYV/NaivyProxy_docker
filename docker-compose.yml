@@ -1,24 +1,25 @@
+version: "3.9"
+
 services:
   naiveproxy:
     build: .
     container_name: naiveproxy
     restart: unless-stopped
-    ports:
-      - "9443:443"        # напрямую, без Traefik
-    environment:
-      DOMAIN: ${DOMAIN}
-      EMAIL: ${EMAIL}
-      PROXY_USER: ${PROXY_USER}
-      PROXY_PASS: ${PROXY_PASS}
-      MASK_SITE: ${MASK_SITE:-https://demo.cloudreve.org}
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
+
     networks:
       - dokploy-network
-volumes:
-  caddy_data:
-  caddy_config:
+
+    labels:
+      - "traefik.enable=true"
+
+      # Роутер
+      - "traefik.http.routers.naive.rule=Host(`proxy.agentsystem.life`)"
+      - "traefik.http.routers.naive.entrypoints=websecure"
+      - "traefik.http.routers.naive.tls=true"
+
+      # Сервис (ВАЖНО: порт внутри контейнера)
+      - "traefik.http.services.naive.loadbalancer.server.port=443"
+
 networks:
   dokploy-network:
     external: true
