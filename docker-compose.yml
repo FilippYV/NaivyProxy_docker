@@ -3,51 +3,36 @@ services:
     build: .
     container_name: naiveproxy
     restart: unless-stopped
-
-    # ── Переменные окружения ────────────────────────────────────────────────────
-    # Задаются в интерфейсе Dokploy → Environment Variables
-    # или через файл .env рядом с compose-файлом
     environment:
-      DOMAIN: ${DOMAIN}           # ваш домен, напр. proxy.example.com
-      EMAIL: ${EMAIL}             # почта для Let's Encrypt
-      PROXY_USER: ${PROXY_USER}   # логин для NaiveProxy-клиента
-      PROXY_PASS: ${PROXY_PASS}   # пароль для NaiveProxy-клиента
-      MASK_SITE: ${MASK_SITE:-https://demo.cloudreve.org}  # сайт-маскировка
-
+      DOMAIN: ${DOMAIN}
+      EMAIL: ${EMAIL}
+      PROXY_USER: ${PROXY_USER}
+      PROXY_PASS: ${PROXY_PASS}
+      MASK_SITE: ${MASK_SITE:-https://demo.cloudreve.org}
     volumes:
-      # Постоянное хранилище сертификатов и состояния Caddy
       - caddy_data:/data
       - caddy_config:/config
-
-    # ── Traefik: TCP Passthrough через SNI ─────────────────────────────────────
-    #
-    # Traefik видит имя домена в TLS ClientHello и пробрасывает сырой TCP
-    # прямо в этот контейнер — Caddy сам терминирует TLS.
-    # Это единственный рабочий вариант для NaiveProxy, так как
-    # протокол требует сквозного HTTPS от клиента до Caddy.
-    #
     labels:
       - "traefik.enable=true"
 
-      # TCP-роутер — НЕ HTTP, потому что нам нужен passthrough
+      # ── HTTP роутер для ACME challenge (порт 80) ──────────────────
+      - "traefik.http.routers.naiveproxy-acme.rule=Host(`${DOMAIN}`) && PathPrefix(`/.well-known/acme-challenge/`)"
+      - "traefik.http.routers.naiveproxy-acme.entrypoints=web"
+      - "traefik.http.services.naiveproxy-acme.loadbalancer.server.port=80"
+
+      # ── TCP passthrough для HTTPS (порт 443) ──────────────────────
       - "traefik.tcp.routers.naiveproxy.rule=HostSNI(`${DOMAIN}`)"
       - "traefik.tcp.routers.naiveproxy.entrypoints=websecure"
-
-      # Ключевая настройка: Traefik НЕ расшифровывает TLS
       - "traefik.tcp.routers.naiveproxy.tls.passthrough=true"
-
-      # Порт внутри контейнера, куда Traefik пробрасывает соединение
       - "traefik.tcp.services.naiveproxy.loadbalancer.server.port=443"
 
     networks:
       - dokploy-network
 
-# ── Тома ───────────────────────────────────────────────────────────────────────
 volumes:
   caddy_data:
   caddy_config:
 
-# ── Сети ───────────────────────────────────────────────────────────────────────
 networks:
   dokploy-network:
     external: true
