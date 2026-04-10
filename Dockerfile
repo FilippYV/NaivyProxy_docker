@@ -1,5 +1,5 @@
 # ── Этап 1: сборка кастомного Caddy ───────────────────────────────────────────
-FROM golang:1.22-bookworm AS builder
+FROM golang:1.25-bookworm AS builder
 
 WORKDIR /build
 
