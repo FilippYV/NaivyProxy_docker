@@ -40,7 +40,7 @@ services:
       - "traefik.tcp.services.naiveproxy.loadbalancer.server.port=443"
 
     networks:
-      - traefik-public   # сеть Traefik в Dokploy (обычно называется именно так)
+      - dokploy-network
 
 # ── Тома ───────────────────────────────────────────────────────────────────────
 volumes:
@@ -49,5 +49,5 @@ volumes:
 
 # ── Сети ───────────────────────────────────────────────────────────────────────
 networks:
-  traefik-public:
-    external: true   # используем уже существующую сеть Traefik от Dokploy
+  dokploy-network:
+    external: true
