@@ -5,11 +5,12 @@ WORKDIR /build
 
 # Подменяем TMPDIR — на VPS /tmp часто слишком мал
 ENV TMPDIR=/build/tmp
+ENV GOPATH=/go
 RUN mkdir -p /build/tmp
 
 # Устанавливаем xcaddy и собираем Caddy с плагином NaiveProxy
 RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest && \
-    ~/go/bin/xcaddy build \
+    /go/bin/xcaddy build \
         --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive \
         --output /build/caddy
 
